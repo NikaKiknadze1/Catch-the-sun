@@ -1,0 +1,177 @@
+// Constants
+var SUN_RADIUS = 60;
+var CLOUD_RADIUS = 120;
+
+var DELAY = 700;
+var WIN_SCORE = 10;
+
+// Global variables
+var sun;
+var score = 5;
+var scoreText;
+var cloud1;
+var cloud2;
+var cloud3;
+var dx = 5;
+var dy = 5;
+var background;
+
+
+function start(){
+    gameInstruction();
+    setupBackground();
+    setupSun();
+    drawClouds();
+    
+    setTimer(moveSun, DELAY);
+    setTimer(moveCloud, 50);
+    mouseClickMethod(catchSun);
+    
+    scoreText = new Text(score);
+	scoreText.setPosition(0, getHeight());
+	add(scoreText);
+}
+
+//When user clicks mouse we get element at 
+//location if it is sun we give a user point
+//otherwise we take away the point. We update score
+//each round as well. 
+function catchSun(e){
+    var elem = getElementAt(e.getX(), e.getY());
+    if(elem == sun){
+		score++;
+		var sound = new Sound("C4", "square");
+        sound.playFor(0.1);
+	}else{
+		score--;
+        var sound2 = new Sound("C1", "sawtooth");
+        sound2.setEffect("distortion", 1);
+		sound2.playFor(0.2);
+	}
+	
+	if(score == 0){
+		displayMessage("Cloudy day :(");
+		background.setColor(Color.gray);
+	}
+	if(score == WIN_SCORE){
+	    fireworks(sun.getX(), sun.getY());
+		displayMessage("Sunny day :)");
+		remove(cloud1);
+		remove(cloud2);
+		remove(cloud3);
+	}
+	
+	scoreText.setText(score);
+    
+}
+
+//This function make sun shine when user wins.
+function fireworks(x, y){
+	var NUM_LINES = 30;
+	var LENGTH = 150;
+	
+	var color = Color.yellow;
+	
+	for(var i = 0; i < NUM_LINES; i++){
+		// Find the angle for the current line
+		var angle = 2*Math.PI/NUM_LINES * i;
+		
+		// Use the angle to find out how far to move
+		// in the x and y directions
+		var dx = Math.cos(angle) * LENGTH;
+		var dy = Math.sin(angle) * LENGTH;
+		
+		var line = new Line(x, y, x + dx, y + dy);
+		line.setColor(color);
+		add(line);
+	}
+}
+
+
+// Display a message on the screen 
+// at the end of the game, and stop
+// the game timer.
+function displayMessage(text){
+	stopTimer(moveSun);
+	stopTimer(moveCloud);
+	var msg = new Text(text, "35pt Arial");
+	msg.setColor(Color.red);
+	msg.setPosition(getWidth()/2 - msg.getWidth()/2, getHeight()/2 - msg.getHeight()/2);
+	add(msg);
+}
+
+//This function set suns position to a random
+//location on the screen.
+function moveSun(){
+    var x = Randomizer.nextInt(sun.getRadius()*2, getWidth() - sun.getRadius());
+    var y = Randomizer.nextInt(sun.getRadius()*2, getHeight() - sun.getRadius());
+    sun.setPosition(x, y);
+}
+
+//This functions has a cloud bounce around the screen.
+function moveCloud(){
+    checkWalls();
+    cloud1.move(dx, dy);
+    cloud2.move(dx, dy);
+    cloud3.move(dx, dy);
+}
+
+
+function checkWalls(){
+    // Bounce off right wall
+	if(cloud2.getX() + cloud2.getRadius() > getWidth()){
+		dx = -dx;
+	}
+	
+	// Bounce off left wall
+	if(cloud2.getX() - cloud2.getRadius() < 0){
+		dx = -dx;
+	}
+	
+	// Bounce off bottom wall
+	if(cloud2.getY() + cloud2.getRadius() > getHeight()){
+		dy = -dy;
+	}
+	
+	// Bounce off top wall
+	if(cloud2.getY() - cloud2.getRadius() < 0){
+		dy = -dy;
+	}
+}
+//This function draws cloud in 
+//the center of the screen.
+function drawClouds(){
+    cloud1 = new Circle(CLOUD_RADIUS/2);
+    cloud2 = new Circle(CLOUD_RADIUS);
+    cloud3 = new Circle(CLOUD_RADIUS/2);
+    cloud1.setColor(Color.white);
+    cloud2.setColor(Color.white);
+    cloud3.setColor(Color.white);
+    cloud2.setPosition(getWidth()/2, getHeight()/2);
+    cloud1.setPosition(cloud2.getX() - CLOUD_RADIUS, cloud2.getY());
+    cloud3.setPosition(cloud2.getX() + CLOUD_RADIUS, cloud2.getY());
+    add(cloud3);
+    add(cloud2);
+    add(cloud1);
+}
+//This function has initially setup
+//the sun and place it offscreen.
+function setupSun(){
+    sun = new Circle(SUN_RADIUS);
+    sun.setColor(Color.yellow);
+    sun.setPosition(-100, -100);
+    add(sun);
+}
+//This function prints instuction for users. 
+function gameInstruction(){
+    println("Cklick run to start game.");
+    println("Try to catch the sun :)");
+    println("Click mouse on sun");
+}
+//This function setups background by covering full 
+//canvas by cyan rectangle. 
+function setupBackground(){
+    background = new Rectangle(getWidth(), getHeight());
+    background.setColor(Color.cyan);
+    add(background);
+}
